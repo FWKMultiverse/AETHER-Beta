@@ -118,7 +118,7 @@ Development began in May 2025. The pace of progress from concept to complete uni
 | Bug resolution & optimization | 🔄 In progress |
 | Training infrastructure preparation | 🔄 In progress |
 | Full training run | ⏳ Planned |
-| Beta release | ⏳ Planned — Early 2027 |
+| Beta release | ⏳ Planned — Early 2027 *(subject to delay — systems of this complexity do not ship on fixed schedules)* |
 
 ---
 
