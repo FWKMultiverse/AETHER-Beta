@@ -67,6 +67,30 @@ Research produces papers. This is a system built to be used. The gap between tho
 
 ---
 
+## On the Training Methodology
+
+The training approach in AETHER is also worth addressing directly, because the field has moved in a specific direction and AETHER diverges from it.
+
+**Where the field is now:**
+
+The dominant trend in RL for LLMs has shifted from standard PPO toward GRPO — Group Relative Policy Optimization — which eliminates the value model entirely and instead scores multiple sampled outputs relative to each other. The motivation is computational efficiency. This is what DeepSeek-R1 used. It works well for reasoning tasks with clear right answers.
+
+Constitutional AI takes a different approach — models critique and revise their own outputs based on predefined principles, which is effective for alignment but operates at the output level.
+
+Both approaches share a common structure: generate output, score it externally, update the policy. The reward signal is applied after generation is complete.
+
+**What AETHER does differently:**
+
+The training loop is not generate → score → update. It is retrieve → critique → refine → score across multiple dimensions → store → update — with the graph embedding from the structural reasoning component entering the loss calculation directly, not as a post-hoc evaluation.
+
+This means the model learns from outputs that have already been improved through a critique-refine cycle, not raw generation. The reward is three-layered: code quality evaluation, a comprehensive scoring component that weights quality, improvement, and novelty separately, and a human-signal component. Priority of replay experiences is influenced not only by TD error but also by the KL divergence between old and new policy — so experiences that caused large policy shifts are revisited more.
+
+The specific values, coefficients, and implementation of the adaptive clipping and GAE smoothing are part of the protected implementation.
+
+The short version: standard RLHF trains on what the model produced. AETHER trains on what the model produced after being told what was wrong with it, evaluated structurally, and given a multi-dimensional reward signal that distinguishes between fixing bugs and genuine improvement. Whether that produces meaningfully better results is an empirical question. The architecture is built to find out.
+
+---
+
 ## Why the Code Is Not Public
 
 The system is built as a single file containing all components. This is not a style choice — it is an architectural requirement. Every component depends on every other component in ways that make separation meaningless. GNN reasoning paths feed directly into language model inference. The routing system depends on fused state that only exists when both are running together. The training loop depends on outputs that only make sense in the context of the full system.
