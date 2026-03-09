@@ -116,7 +116,65 @@ General conversation — with genuine contextual understanding
 
 ---
 
-## Development Status
+## Graph Neural Network Architecture
+
+AETHER uses seven distinct GNN types, each chosen for a specific function. This is not a single GNN applied to all problems — it is a set of specialized graph models that each reason about a different dimension of the input.
+
+**HGT — Heterogeneous Graph Transformer** (WWW 2020, Hu et al.)  
+Used for code structure analysis. HGT is designed for graphs where nodes and edges are of different types — exactly what an abstract syntax tree or a project dependency graph looks like. In published benchmarks on graphs with up to 179 million nodes, HGT outperformed all prior GNN baselines by 9–21%. In AETHER, HGT runs on CPU to leverage large cache architectures, processing code as a heterogeneous graph before its structural output is passed to the fusion layer.
+
+**GATv2 — Graph Attention Network v2** (ICLR 2022, Brody et al.)  
+Used for security analysis and social context. Standard GAT computes static attention — the same attention rankings regardless of the query node. GATv2 fixes this by making attention dynamic: the ranking changes depending on which node is asking. In AETHER, GATv2 runs two separate paths — one that flags structural security risks in input (adversarial patterns, injection attempts, policy violations), and one that models social relationships between concepts in conversation.
+
+**GIN — Graph Isomorphism Network** (ICLR 2019, Xu et al.)  
+Used for semantic understanding, emotional context, and general text. GIN is theoretically the most expressive of the standard message-passing GNNs — capable of distinguishing graph structures that weaker models treat as identical. AETHER uses GIN across three separate paths, each with different activation functions tuned to their purpose: standard ReLU for semantic understanding, Tanh for the emotional range (bounded output is more appropriate for sentiment), and GELU for general text (smoother gradient for longer reasoning chains).
+
+**VisionGNN** — A GATv2-based graph model that processes visual input, representing image patches as graph nodes with spatial relationships as edges. Allows the same GNN-LLM integration to apply to visual inputs without a separate image processing pipeline.
+
+**ContextRouterGNN** — A GATv2-based meta-graph model that does not process user input directly. It processes the outputs of all other GNN paths and learns to weight their relative contribution based on what the input context requires. This is the component that decides, for a given input, how much the emotional path matters versus the security path versus the structural code path.
+
+All five text-processing GNN paths produce independent embeddings that are first projected to LLM hidden dimension space (each with its own projection layer), then fused through two mechanisms: an 8-head cross-attention layer that allows each path to attend to the others, and a concatenation-based fusion layer. The outputs of both mechanisms are combined at a fixed ratio before being injected into the language model's reasoning process.
+
+The specific injection mechanism — how and where the fused GNN state enters the LLM — is part of the protected implementation.
+
+---
+
+## Agent Architecture and Routing
+
+AETHER operates through a set of specialized agents that share a common foundation but are optimized for different types of tasks. These are not separate models. They are reasoning modes within the same system, each with domain-specific knowledge, tools, and behavior patterns.
+
+The system currently defines agents across the following domains:
+
+Software engineering — code generation, review, debugging, refactoring, migration across languages and frameworks  
+Quality assurance — code review, bug identification, test generation  
+Research and analysis — synthesis, investigation, scientific and mathematical reasoning  
+System design — architecture planning, ML pipeline design  
+Financial — real-time market analysis and advanced quantitative methods as separate agents  
+Creative — writing, content strategy, and long-form creative work  
+Education — adaptive explanation and comprehension  
+Mental health — crisis-aware supportive conversation  
+Career — job search, resume, professional development  
+Daily life — health, scheduling, decision support  
+Security — vulnerability detection and audit  
+Game development — game logic, systems, and real-time state analysis  
+Infrastructure — cloud, DevOps, deployment, database, API development  
+Mobile — iOS and Android development  
+Data science and machine learning — model development and analysis  
+General conversation — context-rich open-ended dialogue  
+Web search — real-time information retrieval integrated into responses  
+Explainability — reasoning transparency on demand
+
+**Routing — MixtureOfExpertsRouter with LearnedNeuralRouter**
+
+Agent selection is handled by a Mixture of Experts routing system that combines two mechanisms: a neural router and a keyword fallback.
+
+The neural router (LearnedNeuralRouter) is itself a GNN — using GATv2 for attention-based agent relationship modeling and GIN for learning interaction patterns between agents. It takes an embedding of the input and the current context, and learns which agent or combination of agents is most appropriate. This is not a static classifier. It learns from routing history and can represent complex relationships between agents — for example, understanding that a security question asked in the middle of a code review session should route differently than the same question in isolation.
+
+The keyword fallback exists for reliability. If the neural router produces low-confidence output or encounters an input type it hasn't seen in sufficient quantity, the keyword system provides a deterministic backup. Production systems should not depend solely on learned routing, and AETHER does not.
+
+When multiple agents are relevant, the router produces a ranked permutation ordered by relevance score — not a fixed priority ordering. This means the same agents may be invoked in different orders depending on context. The specific conflict resolution and coordination mechanism is part of the protected implementation.
+
+---
 
 Started: May 2025
 
