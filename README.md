@@ -55,15 +55,15 @@ The three most relevant approaches in current literature:
 
 **GNN-RAG** (2024) — Uses GNN to retrieve reasoning paths from knowledge graphs, then passes those paths as text input to an LLM. The two systems remain fully separate. GNN runs first, produces text, LLM reads that text. Integration happens at the input prompt level.
 
-**GL-Fusion** (ICLR 2024) — The closest published work to deep integration. Incorporates GNN message-passing into LLM transformer layers for specific graph tasks. Achieves strong benchmark results. However, it is designed for graph-structured datasets — not general-purpose language tasks — and requires task-specific training per application domain.
+**GL-Fusion** (arXiv Dec 2024, submitted to ICLR 2025) — The closest published work to genuine deep integration, and worth understanding precisely. It introduces three innovations: Structure-Aware Transformers that embed GNN message-passing directly into LLM transformer layers (specifically at layers 0, 4, 8, 12, 16, 20, 24, 28 of a LLaMA-3-8B backbone), Graph-Text Cross-Attention that processes full uncompressed text from graph nodes and edges at alternating layers, and a GNN-LLM Twin Predictor that runs both prediction paths simultaneously. It achieves state-of-the-art results on OGBN-Arxiv (node classification) and OGBG-Code2 (function name generation from AST). This is serious, well-executed work. The scope is the limitation: GL-Fusion requires graph-structured input — specifically text-attributed graphs where nodes and edges carry labels. The GNN message-passing happens across explicit graph topology. It is evaluated on graph datasets and graph tasks. There is no general-purpose input path. A plain conversation, a block of code, or an ambiguous question — none of these are graph-structured data. GL-Fusion does not process them as-is.
 
 **Hybrid-LLM-GNN** (2024) — Extracts embeddings from both GNN and LLM separately, then combines them for prediction. Demonstrates meaningful accuracy improvement in domain-specific tasks. The combination happens after both models have finished processing independently.
 
-The pattern across all three — and across the broader field — is consistent: integration happens at the output stage, or at the input stage, or for a specific task. The two systems do not reason together during inference in a general-purpose architecture.
+The pattern across all three — and across the broader field — is consistent: either the two systems remain decoupled and exchange results, or the integration is deep but narrow — built for graph-structured data and specific benchmark tasks, not general-purpose language understanding and generation.
 
-That is the gap AETHER is built to close. The method is not described here because the implementation is what is protected — not the general concept. The general concept is known. How it is built to work across general tasks, in a single unified system, trained and running as one — that is what is not in the literature.
+The pattern across all three — and across the broader field — is consistent: either the two systems remain fully separate and pass outputs to each other, or the integration is deep but requires graph-structured input and task-specific training.
 
-Research produces papers. This is a system built to be used. The gap between those two things is real, significant, and intentional.
+GL-Fusion is the most technically advanced of these approaches. Being precise about the difference matters. GL-Fusion integrates GNN into LLM for inputs that are already graphs. AETHER derives structural representations from arbitrary inputs — plain language, code, conversation — and integrates them into language model inference in real time, without requiring the input to be a graph. The input format is unrestricted. The structural reasoning is constructed from whatever arrives. That is a different problem, and it is the one that has not been solved in the published literature.
 
 ---
 
