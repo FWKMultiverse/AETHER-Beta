@@ -49,11 +49,31 @@ The reason there is no benchmark data, no paper, and no public demo is straightf
 
 ## On Existing Research
 
-There is published research on combining graph neural networks with language models. This work is known and has been studied.
+There is published research on combining graph neural networks with language models. This work is known, has been studied, and some of it is genuinely good. Dismissing it would be dishonest.
 
-The gap between research and working general-purpose implementation is real and significant. Most published work in this area is task-specific, requires separate training pipelines for each application, or achieves integration at the output stage rather than during inference. None of this diminishes that research — it accurately reflects the state of the field.
+The three most relevant approaches in current literature:
 
-AETHER's implementation addresses these gaps in a unified system. The specific method is not described here. That is intentional.
+**GNN-RAG** (2024) — Uses GNN to retrieve reasoning paths from knowledge graphs, then passes those paths as text input to an LLM. The two systems remain fully separate. GNN runs first, produces text, LLM reads that text. Integration happens at the input prompt level.
+
+**GL-Fusion** (ICLR 2024) — The closest published work to deep integration. Incorporates GNN message-passing into LLM transformer layers for specific graph tasks. Achieves strong benchmark results. However, it is designed for graph-structured datasets — not general-purpose language tasks — and requires task-specific training per application domain.
+
+**Hybrid-LLM-GNN** (2024) — Extracts embeddings from both GNN and LLM separately, then combines them for prediction. Demonstrates meaningful accuracy improvement in domain-specific tasks. The combination happens after both models have finished processing independently.
+
+The pattern across all three — and across the broader field — is consistent: integration happens at the output stage, or at the input stage, or for a specific task. The two systems do not reason together during inference in a general-purpose architecture.
+
+That is the gap AETHER is built to close. The method is not described here because the implementation is what is protected — not the general concept. The general concept is known. How it is built to work across general tasks, in a single unified system, trained and running as one — that is what is not in the literature.
+
+Research produces papers. This is a system built to be used. The gap between those two things is real, significant, and intentional.
+
+---
+
+## Why the Code Is Not Public
+
+The system is built as a single file containing all components. This is not a style choice — it is an architectural requirement. Every component depends on every other component in ways that make separation meaningless. GNN reasoning paths feed directly into language model inference. The routing system depends on fused state that only exists when both are running together. The training loop depends on outputs that only make sense in the context of the full system.
+
+This also means the system cannot be partially demonstrated. Running one component in isolation produces a standard model. The behavior that makes AETHER different only exists when everything runs together. That is why there is no demo, no benchmark on isolated components, and no public code — not because there is nothing to show, but because a partial showing would be actively misleading.
+
+The code will remain private until the system has been trained and the results speak clearly.
 
 ---
 
